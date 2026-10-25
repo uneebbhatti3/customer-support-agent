@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String // digits only, e.g. "03005551234"
+  createdAt DateTime @default(now())
+  orders    Order[]
+  tickets   Ticket[]
+}
+
+model Order {
+  id             Int         @id @default(autoincrement())
+  orderNumber    Int         @unique
+  product        String
+  status         OrderStatus
+  carrier        String?
+  trackingNumber String?
+  placedAt       DateTime    @default(now())
+  customerId     Int
+  customer       Customer    @relation(fields: [customerId], references: [id])
+  tickets        Ticket[]
+
+  @@index([customerId])
+}
+
+model Ticket {
+  id          Int      @id @default(autoincrement())
+  subject     String
+  description String
+  createdAt   DateTime @default(now())
+  customerId  Int
+  customer    Customer @relation(fields: [customerId], references: [id])
+  orderId     Int?
+  order       Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([customerId])
+}
